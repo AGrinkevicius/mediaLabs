@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Player Lab</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        video {
+            width: 80%;
+            margin: 20px auto;
+            display: block;
+            border: 2px solid #000;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center">HLS Player Lab1</h1>
+
+    <video id="video" controls></video>
+
+    <div class="controls">
+        <button onclick="playVideo()">Play</button>
+        <button onclick="pauseVideo()">Pause</button>
+        <button onclick="stopVideo()">Stop</button>
+        <button onclick="jumpForward()">+5 sec</button>
+        <button onclick="jumpBackward()">-5 sec</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const videoSrc = 'https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8';
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = videoSrc;
+        }
+
+        function playVideo() {
+            video.play();
+        }
+
+        function pauseVideo() {
+            video.pause();
+        }
+
+        function stopVideo() {
+            video.pause();
+            video.currentTime = 0;
+        }
+
+        function jumpForward() {
+            video.currentTime += 5;
+        }
+
+        function jumpBackward() {
+            video.currentTime -= 5;
+        }
+    </script>
+</body>
+</html>

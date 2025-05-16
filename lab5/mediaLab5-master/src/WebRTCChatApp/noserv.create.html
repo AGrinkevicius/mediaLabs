@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CREATE WebRTC channel</title>
+  <link href="noserv.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+<h2>CREATE WebRTC channel <span id="status">init</span></h2>
+
+<video id="localVideo" autoplay muted playsinline></video>
+
+<h3>1. CREATE Offer's SDP</h3>
+<textarea id="creater-sdp"></textarea>
+
+<h3>4. GET Participant's SDP <button id="start">start</button></h3>
+<textarea id="joiner-sdp" placeholder="HERE COPY AND PASTE [3.Participant'S SDP]"></textarea>
+
+<h3>CHAT</h3>
+<div id="chat">
+  <div id="chat-screen-wp">
+    <div id="chat-screen"></div>
+  </div>
+  <div id="ct"><input id="msg" disabled><button id="send" disabled>send</button></div>
+</div>
+
+<script>
+let localStream;
+let dc;
+const sdpConstraints = { optional: [{ RtpDataChannels: true }] };
+const pc = new RTCPeerConnection(null);
+
+// Monitor ICE connection state
+pc.oniceconnectionstatechange = function () {
+  const state = pc.iceConnectionState;
+  $('#status').text(state);
+  if (state === "connected") $("#msg, #send").prop("disabled", false);
+};
+
+// On ICE complete, share localDescription (offer)
+pc.onicecandidate = function (e) {
+  if (!e.candidate) {
+    $("#creater-sdp").val(JSON.stringify(pc.localDescription));
+  }
+};
+
+// Setup chat
+function setupChat() {
+  dc = pc.createDataChannel("chat");
+  dc.onopen = function () {
+    $("textarea").attr("disabled", true);
+    addMSG("CONNECTED!", "info");
+  };
+  dc.onmessage = function (e) {
+    if (e.data) addMSG(e.data, "other");
+  };
+}
+
+// Setup video stream
+navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+  .then((stream) => {
+    $("#localVideo").get(0).srcObject = stream;
+    localStream = stream;
+
+    // Add webcam tracks to peer connection
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+    setupChat();
+
+    // Create and set offer SDP
+    pc.createOffer().then(offer => pc.setLocalDescription(offer));
+  })
+  .catch(err => {
+    alert("Camera access failed: " + err);
+  });
+
+// Handle answer from joiner
+function start() {
+  const answerSDP = $('#joiner-sdp').val();
+  const answerDesc = new RTCSessionDescription(JSON.parse(answerSDP));
+  pc.setRemoteDescription(answerDesc);
+}
+
+$("#start").click(start);
+
+const addMSG = function (msg, who) {
+  const wrap = $("<div>").addClass("wrap").appendTo($("#chat-screen"));
+  const div = $("<div>").addClass(who).appendTo(wrap);
+  $("<span>").html(who).addClass("who").appendTo(div);
+  $("<span>").html(msg).addClass("msg").appendTo(div);
+  $("#chat-screen-wp").scrollTop($("#chat-screen").height());
+};
+
+const sendMSG = function () {
+  const value = $("#msg").val();
+  if (value) {
+    dc.send(value);
+    addMSG(value, "me");
+    $("#msg").val('');
+  }
+};
+
+$("#msg").keypress(function (e) { if (e.which === 13) sendMSG(); });
+$("#send").click(sendMSG);
+</script>
+</body>
+</html>

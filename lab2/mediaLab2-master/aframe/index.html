@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VR App - Control Panel</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="js/aframe-pointcloud-component.js"></script>
+  <link rel="icon" href="data:,">
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    .controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
+      z-index: 9999;
+    }
+
+    .controls button {
+      display: block;
+      width: 120px;
+      margin: 5px 0;
+      padding: 6px;
+      background: #555;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HTML GUI Controls -->
+  <div class="controls">
+    <button onclick="rotateModel(10)">Rotate +</button>
+    <button onclick="rotateModel(-10)">Rotate -</button>
+    <button onclick="zoomModel(1.1)">Zoom In</button>
+    <button onclick="zoomModel(0.9)">Zoom Out</button>
+    <button onclick="moveModel(0.2)">Move Up</button>
+    <button onclick="moveModel(-0.2)">Move Down</button>
+  </div>
+
+  <!-- A-Frame VR Scene -->
+  <a-scene>
+    <a-assets>
+      <img id="groundTexture" crossorigin="anonymous" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+      <img id="skyTexture" crossorigin="anonymous" src="https://cdn.aframe.io/a-painter/images/sky.jpg">
+    </a-assets>
+
+    <!-- Environment -->
+    <a-plane src="#groundTexture" rotation="-90 0 0" height="100" width="100"></a-plane>
+    <a-sky src="#skyTexture"></a-sky>
+    <a-light type="ambient" color="#ccc"></a-light>
+    <a-light type="point" intensity="1.5" position="2 4 4"></a-light>
+
+    <!-- Point Cloud Model -->
+    <a-pointcloud 
+      id="model"
+      scale="0.5 0.5 0.5" 
+      position="0 1.5 -3" 
+      rotation="0 0 0"
+      src="url(Sphere.ply)" 
+      size="0.05"
+      texture="url(VGTU-logo.png)"
+      depthwrite="false">
+    </a-pointcloud>
+  </a-scene>
+
+  <!-- JavaScript for Control Panel -->
+  <script>
+    const model = document.querySelector('#model');
+
+    function rotateModel(deg) {
+      const r = model.getAttribute('rotation');
+      model.setAttribute('rotation', { x: r.x, y: r.y + deg, z: r.z });
+    }
+
+    function zoomModel(factor) {
+      const s = model.getAttribute('scale');
+      model.setAttribute('scale', { x: s.x * factor, y: s.y * factor, z: s.z * factor });
+    }
+
+    function moveModel(offset) {
+      const p = model.getAttribute('position');
+      model.setAttribute('position', { x: p.x, y: p.y + offset, z: p.z });
+    }
+  </script>
+</body>
+</html>
